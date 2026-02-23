@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent Flow</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --border: #e0ddd6;
+    --text-dark: #1a1a2e;
+    --text-mid: #5c5c7a;
+    --text-light: #9898b0;
+
+    /* Node palette */
+    --c-input:    #3b5bdb;
+    --c-llm:      #1c7ed6;
+    --c-memory:   #7048e8;
+    --c-tools:    #0ca678;
+    --c-plan:     #f08c00;
+    --c-exec:     #d6336c;
+    --c-output:   #2b8a3e;
+    --c-human:    #862e9c;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text-dark);
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 16px 28px 10px;
+    background: linear-gradient(to bottom, var(--bg) 75%, transparent);
+    z-index: 100; pointer-events: none;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  #header h1 {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-dark);
+  }
+  #header span {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--text-light);
+  }
+
+  /* ── LEGEND ── */
+  #legend {
+    position: fixed; bottom: 18px; left: 24px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 7px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    z-index: 100;
+  }
+  #legend .leg-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.1em;
+    color: var(--text-light); text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .leg-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--text-mid);
+  }
+  .leg-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── HINT ── */
+  #hint {
+    position: fixed; bottom: 18px; right: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--text-light);
+    background: white; border: 1px solid var(--border);
+    padding: 8px 14px; border-radius: 20px;
+    letter-spacing: 0.06em;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    pointer-events: none;
+    transition: opacity 1.2s;
+  }
+
+  /* ── SVG ── */
+  svg { width: 100%; height: 100%; }
+
+  .link {
+    fill: none;
+    stroke: #c8c4bc;
+    stroke-width: 1.5px;
+    stroke-dasharray: none;
+  }
+  .link.dashed {
+    stroke-dasharray: 5,4;
+    stroke: #d0ccc5;
+  }
+  .link-arrow { fill: #bbb8b0; }
+
+  .node { cursor: pointer; }
+
+  .node circle {
+    transition: r 0.35s cubic-bezier(.34,1.56,.64,1),
+                filter 0.2s, stroke-width 0.2s;
+  }
+  .node:hover circle {
+    filter: brightness(0.92);
+    stroke-width: 2.5px !important;
+  }
+
+  .node text {
+    pointer-events: none;
+    dominant-baseline: middle;
+    text-anchor: middle;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    fill: white;
+  }
+
+  /* Loop arrow label */
+  .loop-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    fill: var(--text-light);
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed; pointer-events: none;
+    background: white; border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 12px; line-height: 1.5;
+    max-width: 220px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    opacity: 0; transition: opacity 0.15s;
+    z-index: 200;
+  }
+  #tooltip .tt-title {
+    font-weight: 600; font-size: 13px; margin-bottom: 3px;
+  }
+  #tooltip .tt-desc {
+    color: var(--text-mid); font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>AI Agent — Execution Flow</h1>
+  <span>// click nodes to expand · drag to reposition</span>
+</div>
+
+<div id="legend">
+  <div class="leg-title">Component Types</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#3b5bdb"></div>Input / Perception</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#1c7ed6"></div>LLM Core</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#7048e8"></div>Memory</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#0ca678"></div>Tools / Actions</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#f08c00"></div>Planning</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#d6336c"></div>Execution</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#2b8a3e"></div>Output</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#862e9c"></div>Human-in-loop</div>
+</div>
+
+<div id="hint">click a node to expand details · click background to reset</div>
+<div id="tooltip"></div>
+
+<svg id="canvas">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#bbb8b0"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3b5bdb88"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.10)"/>
+    </filter>
+    <filter id="shadow-lg" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="rgba(0,0,0,0.13)"/>
+    </filter>
+  </defs>
+  <rect id="bg-rect" width="100%" height="100%" fill="transparent"/>
+  <g id="links-layer"></g>
+  <g id="nodes-layer"></g>
+</svg>
+
+<script>
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+
+// ── NODES ─────────────────────────────────────────────────────────────────────
+// depth 0 = always visible main flow
+// depth 1 = children, shown when parent expanded
+
+const NODES = [
+  // ── MAIN FLOW (depth 0)
+  {
+    id: "input",    label: "User\nInput",      r: 38, color: "#3b5bdb", depth: 0,
+    desc: "Receives natural language queries, commands, or multimodal data from the user or upstream systems."
+  },
+  {
+    id: "context",  label: "Context\nBuilder",  r: 34, color: "#3b5bdb", depth: 0,
+    desc: "Assembles the full prompt: system instructions, conversation history, retrieved memory, and tool schemas."
+  },
+  {
+    id: "llm",      label: "LLM\nReasoner",     r: 48, color: "#1c7ed6", depth: 0,
+    desc: "The core language model. Reads context, decides next action: answer directly, call a tool, or plan sub-tasks."
+  },
+  {
+    id: "router",   label: "Output\nRouter",    r: 34, color: "#f08c00", depth: 0,
+    desc: "Classifies the LLM's response type: final answer, tool call, sub-agent delegation, or human escalation."
+  },
+  {
+    id: "executor", label: "Tool\nExecutor",    r: 38, color: "#d6336c", depth: 0,
+    desc: "Runs the requested tool or API call, captures the result, and feeds it back into the observation loop."
+  },
+  {
+    id: "output",   label: "Final\nOutput",     r: 38, color: "#2b8a3e", depth: 0,
+    desc: "Formats and delivers the final response: text, structured data, actions taken, or a handoff to the user."
+  },
+  {
+    id: "memory",   label: "Memory\nStore",     r: 36, color: "#7048e8", depth: 0,
+    desc: "Persists information across turns. Includes short-term (context window), episodic (past sessions), and semantic (vector) memory."
+  },
+  {
+    id: "human",    label: "Human\nReview",     r: 30, color: "#862e9c", depth: 0,
+    desc: "Human-in-the-loop checkpoint. Triggered when confidence is low, actions are irreversible, or policy requires approval."
+  },
+
+  // ── CHILDREN of context
+  {
+    id: "sys_prompt",  label: "System\nPrompt",    r: 22, color: "#4c72e0", depth: 1, parent: "context",
+    desc: "Defines the agent's persona, constraints, available tools, and behavioral rules."
+  },
+  {
+    id: "history",     label: "Chat\nHistory",     r: 22, color: "#4c72e0", depth: 1, parent: "context",
+    desc: "Prior turns in the conversation, truncated or summarized to fit the context window."
+  },
+  {
+    id: "retrieval",   label: "RAG\nRetrieval",    r: 24, color: "#4c72e0", depth: 1, parent: "context",
+    desc: "Relevant documents or facts fetched from a vector store via semantic similarity search."
+  },
+
+  // ── CHILDREN of llm
+  {
+    id: "cot",      label: "Chain of\nThought",   r: 24, color: "#2d9be0", depth: 1, parent: "llm",
+    desc: "Step-by-step reasoning trace produced before the final answer. Improves accuracy on complex tasks."
+  },
+  {
+    id: "fc",       label: "Function\nCalling",   r: 24, color: "#2d9be0", depth: 1, parent: "llm",
+    desc: "Structured output specifying which tool to invoke, with typed arguments parsed from the prompt."
+  },
+  {
+    id: "reflect",  label: "Self-\nReflection",   r: 22, color: "#2d9be0", depth: 1, parent: "llm",
+    desc: "The model critiques its own draft answer and iterates before outputting — improves factual accuracy."
+  },
+
+  // ── CHILDREN of executor
+  {
+    id: "web",      label: "Web\nSearch",         r: 22, color: "#e03060", depth: 1, parent: "executor",
+    desc: "Queries search engines or scrapes URLs to retrieve real-time information."
+  },
+  {
+    id: "code",     label: "Code\nInterpreter",   r: 22, color: "#e03060", depth: 1, parent: "executor",
+    desc: "Executes Python or JS code in a sandbox. Used for data analysis, calculations, and file manipulation."
+  },
+  {
+    id: "api",      label: "External\nAPIs",      r: 22, color: "#e03060", depth: 1, parent: "executor",
+    desc: "REST / GraphQL calls to third-party services: databases, CRMs, IoT endpoints, or internal tools."
+  },
+  {
+    id: "subagent", label: "Sub-\nAgent",         r: 24, color: "#e03060", depth: 1, parent: "executor",
+    desc: "Delegates a sub-task to a specialized agent. Enables multi-agent orchestration and parallel execution."
+  },
+
+  // ── CHILDREN of memory
+  {
+    id: "stm",      label: "Short-term\nContext", r: 20, color: "#8b6aee", depth: 1, parent: "memory",
+    desc: "Active context window — the 'working memory' of the current session."
+  },
+  {
+    id: "episodic", label: "Episodic\nMemory",    r: 20, color: "#8b6aee", depth: 1, parent: "memory",
+    desc: "Summaries of past sessions stored externally. Recalled when relevant to current task."
+  },
+  {
+    id: "vector",   label: "Vector\nStore",       r: 22, color: "#8b6aee", depth: 1, parent: "memory",
+    desc: "Embeddings database (e.g. pgvector, Pinecone). Enables semantic similarity search over large corpora."
+  },
+];
+
+// ── LINKS ─────────────────────────────────────────────────────────────────────
+const LINKS = [
+  // Main flow
+  { source: "input",    target: "context",  type: "flow" },
+  { source: "context",  target: "llm",      type: "flow" },
+  { source: "llm",      target: "router",   type: "flow" },
+  { source: "router",   target: "executor", type: "flow", label: "tool call" },
+  { source: "router",   target: "output",   type: "flow", label: "answer" },
+  { source: "router",   target: "human",    type: "flow", label: "escalate" },
+  { source: "executor", target: "context",  type: "feedback", label: "observation" },
+  { source: "memory",   target: "context",  type: "support" },
+  { source: "executor", target: "memory",   type: "support" },
+  { source: "output",   target: "memory",   type: "support" },
+
+  // Children — context
+  { source: "context", target: "sys_prompt", type: "child" },
+  { source: "context", target: "history",    type: "child" },
+  { source: "context", target: "retrieval",  type: "child" },
+
+  // Children — llm
+  { source: "llm", target: "cot",     type: "child" },
+  { source: "llm", target: "fc",      type: "child" },
+  { source: "llm", target: "reflect", type: "child" },
+
+  // Children — executor
+  { source: "executor", target: "web",      type: "child" },
+  { source: "executor", target: "code",     type: "child" },
+  { source: "executor", target: "api",      type: "child" },
+  { source: "executor", target: "subagent", type: "child" },
+
+  // Children — memory
+  { source: "memory", target: "stm",      type: "child" },
+  { source: "memory", target: "episodic", type: "child" },
+  { source: "memory", target: "vector",   type: "child" },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const expandedNodes = new Set();
+const nodeById = {};
+NODES.forEach(n => nodeById[n.id] = n);
+
+function isVisible(n) {
+  if (n.depth === 0) return true;
+  return expandedNodes.has(n.parent);
+}
+
+// ── INITIAL POSITIONS (loose circle layout for depth-0) ──────────────────────
+function initPositions() {
+  const d0 = NODES.filter(n => n.depth === 0);
+  const cx = W() / 2, cy = H() / 2;
+  // Place main flow nodes in a loose ellipse
+  const positions = {
+    input:    { x: cx - 340, y: cy },
+    context:  { x: cx - 180, y: cy - 100 },
+    llm:      { x: cx,       y: cy },
+    router:   { x: cx + 170, y: cy - 60 },
+    executor: { x: cx + 170, y: cy + 100 },
+    output:   { x: cx + 340, y: cy },
+    memory:   { x: cx - 60,  y: cy + 180 },
+    human:    { x: cx + 340, y: cy - 160 },
+  };
+  d0.forEach(n => {
+    if (positions[n.id]) { n.x = positions[n.id].x; n.y = positions[n.id].y; }
+    else { n.x = cx; n.y = cy; }
+  });
+}
+initPositions();
+
+// ── D3 SETUP ──────────────────────────────────────────────────────────────────
+const svg = d3.select("#canvas");
+const linksLayer = svg.select("#links-layer");
+const nodesLayer = svg.select("#nodes-layer");
+const tooltip = document.getElementById("tooltip");
+
+const simulation = d3.forceSimulation()
+  .force("link", d3.forceLink().id(d => d.id).distance(d => {
+    const s = nodeById[d.source.id || d.source];
+    const t = nodeById[d.target.id || d.target];
+    if (!s || !t) return 120;
+    const base = (s.r + t.r) * 1.5;
+    if (d.type === "child") return base * 0.9;
+    return base + 20;
+  }).strength(d => d.type === "child" ? 0.6 : 0.3))
+  .force("charge", d3.forceManyBody().strength(d => -(d.r ** 2) * 0.7))
+  .force("collide", d3.forceCollide().radius(d => d.r + 18).strength(0.85))
+  .alphaDecay(0.025)
+  .on("tick", ticked);
+
+// Fix depth-0 nodes initially
+function applyFixedPositions() {
+  NODES.filter(n => n.depth === 0).forEach(n => {
+    // We don't pin them — let them be semi-free but return to init
+  });
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const visNodes = NODES.filter(isVisible);
+  const visIds = new Set(visNodes.map(n => n.id));
+
+  const visLinks = LINKS.filter(l => {
+    const sid = l.source.id || l.source;
+    const tid = l.target.id || l.target;
+    return visIds.has(sid) && visIds.has(tid);
+  });
+
+  // ── LINKS
+  const linkSel = linksLayer.selectAll(".link-group")
+    .data(visLinks, d => `${d.source.id||d.source}→${d.target.id||d.target}`);
+
+  linkSel.exit().transition().duration(250).style("opacity", 0).remove();
+
+  const linkEnter = linkSel.enter().append("g")
+    .attr("class", "link-group")
+    .style("opacity", 0);
+
+  linkEnter.append("line")
+    .attr("class", d => "link" + (d.type === "feedback" || d.type === "support" ? " dashed" : ""))
+    .attr("marker-end", d => d.type !== "child" ? "url(#arrow)" : null);
+
+  linkEnter.transition().duration(400).style("opacity", 1);
+
+  // ── NODES
+  const nodeSel = nodesLayer.selectAll(".node")
+    .data(visNodes, d => d.id);
+
+  nodeSel.exit().transition().duration(250)
+    .style("opacity", 0)
+    .on("end", function() { d3.select(this).remove(); });
+
+  const nodeEnter = nodeSel.enter().append("g")
+    .attr("class", "node")
+    .style("opacity", 0)
+    .call(d3.drag()
+      .on("start", dragStart)
+      .on("drag",  dragged)
+      .on("end",   dragEnd))
+    .on("click",     onNodeClick)
+    .on("mouseover", onHover)
+    .on("mouseout",  onHoverOut);
+
+  nodeEnter.append("circle")
+    .attr("r", 0)
+    .attr("fill", d => d.color)
+    .attr("stroke", d => "white")
+    .attr("stroke-width", 2)
+    .style("filter", d => d.depth === 0 ? "url(#shadow-lg)" : "url(#shadow)");
+
+  nodeEnter.append("text");
+
+  // Animate in
+  nodeEnter.transition().duration(450).delay((_, i) => i * 25)
+    .style("opacity", 1)
+    .select("circle").attr("r", d => d.r);
+
+  // Update text on all nodes
+  nodesLayer.selectAll(".node text").each(function(d) {
+    const lines = d.label.split("\n");
+    const el = d3.select(this);
+    el.selectAll("*").remove();
+    const fs = Math.max(9, Math.min(14, d.r * 0.31));
+    el.attr("font-size", fs);
+    if (lines.length === 1) {
+      el.text(d.label);
+    } else {
+      lines.forEach((line, i) => {
+        el.append("tspan")
+          .attr("x", 0)
+          .attr("dy", i === 0 ? -(lines.length - 1) * fs * 0.55 : fs * 1.15)
+          .text(line);
+      });
+    }
+  });
+
+  // Update expand indicator (ring on expandable nodes)
+  nodesLayer.selectAll(".node").each(function(d) {
+    const hasChildren = NODES.some(n => n.parent === d.id);
+    const isExpanded = expandedNodes.has(d.id);
+    const g = d3.select(this);
+
+    g.selectAll(".expand-ring").remove();
+    if (hasChildren) {
+      g.insert("circle", "circle")
+        .attr("class", "expand-ring")
+        .attr("r", d.r + 6)
+        .attr("fill", "none")
+        .attr("stroke", isExpanded ? d.color : "#ccc")
+        .attr("stroke-width", isExpanded ? 2 : 1)
+        .attr("stroke-dasharray", isExpanded ? "none" : "4,3")
+        .style("pointer-events", "none");
+    }
+  });
+
+  // Sync simulation
+  simulation.nodes(visNodes);
+  simulation.force("link").links(visLinks);
+  simulation.alpha(0.45).restart();
+}
+
+function ticked() {
+  linksLayer.selectAll(".link-group").each(function(d) {
+    const sx = d.source.x || 0, sy = d.source.y || 0;
+    const tx = d.target.x || 0, ty = d.target.y || 0;
+
+    // Shorten endpoints to circle edge
+    const dx = tx - sx, dy = ty - sy;
+    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    const sr = (nodeById[d.source.id || d.source]?.r || 20);
+    const tr = (nodeById[d.target.id || d.target]?.r || 20);
+    const x1 = sx + dx / dist * sr;
+    const y1 = sy + dy / dist * sr;
+    const x2 = tx - dx / dist * (tr + 8);
+    const y2 = ty - dy / dist * (tr + 8);
+
+    d3.select(this).select("line")
+      .attr("x1", x1).attr("y1", y1)
+      .attr("x2", x2).attr("y2", y2);
+  });
+
+  nodesLayer.selectAll(".node")
+    .attr("transform", d => `translate(${d.x||0},${d.y||0})`);
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────────────────────
+function onNodeClick(event, d) {
+  event.stopPropagation();
+  const hasChildren = NODES.some(n => n.parent === d.id);
+  if (!hasChildren) return;
+
+  if (expandedNodes.has(d.id)) {
+    collapseNode(d.id);
+  } else {
+    expandedNodes.add(d.id);
+  }
+  d3.select("#hint").style("opacity", 0);
+  render();
+}
+
+function collapseNode(id) {
+  expandedNodes.delete(id);
+  NODES.filter(n => n.parent === id).forEach(c => collapseNode(c.id));
+}
+
+svg.select("#bg-rect").on("click", () => {
+  expandedNodes.clear();
+  render();
+});
+
+function onHover(event, d) {
+  tooltip.style.opacity = 1;
+  tooltip.innerHTML = `<div class="tt-title">${d.label.replace("\n", " ")}</div><div class="tt-desc">${d.desc}</div>`;
+  const hasChildren = NODES.some(n => n.parent === d.id);
+  if (hasChildren) {
+    tooltip.innerHTML += `<div style="margin-top:6px;font-size:10px;color:#aaa;font-family:'DM Mono',monospace">${expandedNodes.has(d.id) ? "▾ click to collapse" : "▸ click to expand"}</div>`;
+  }
+  moveTip(event);
+}
+function onHoverOut() { tooltip.style.opacity = 0; }
+function moveTip(event) {
+  tooltip.style.left = (event.clientX + 14) + "px";
+  tooltip.style.top  = (event.clientY - 10) + "px";
+}
+document.addEventListener("mousemove", e => {
+  if (tooltip.style.opacity === "1") moveTip(e);
+});
+
+// Drag
+function dragStart(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+function dragEnd(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+render();
+
+window.addEventListener("resize", () => {
+  simulation.force("center", d3.forceCenter(W()/2, H()/2).strength(0.02));
+  simulation.alpha(0.2).restart();
+});
+</script>
+</body>
+</html>
