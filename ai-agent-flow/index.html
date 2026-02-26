@@ -12,21 +12,10 @@
 
   :root {
     --bg: #f4f3ef;
-    --surface: #ffffff;
     --border: #e0ddd6;
     --text-dark: #1a1a2e;
     --text-mid: #5c5c7a;
     --text-light: #9898b0;
-
-    /* Node palette */
-    --c-input:    #3b5bdb;
-    --c-llm:      #1c7ed6;
-    --c-memory:   #7048e8;
-    --c-tools:    #0ca678;
-    --c-plan:     #f08c00;
-    --c-exec:     #d6336c;
-    --c-output:   #2b8a3e;
-    --c-human:    #862e9c;
   }
 
   html, body {
@@ -37,7 +26,6 @@
     overflow: hidden;
   }
 
-  /* ── HEADER ── */
   #header {
     position: fixed; top: 0; left: 0; right: 0;
     padding: 16px 28px 10px;
@@ -45,120 +33,111 @@
     z-index: 100; pointer-events: none;
     display: flex; align-items: baseline; gap: 12px;
   }
-  #header h1 {
-    font-size: 13px; font-weight: 600;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--text-dark);
-  }
-  #header span {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px; color: var(--text-light);
-  }
+  #header h1 { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+  #header span { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-light); }
 
-  /* ── LEGEND ── */
+  #controls {
+    position: fixed; top: 14px; right: 20px;
+    display: flex; align-items: center; gap: 10px; z-index: 200;
+  }
+  #controls label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-mid); }
+  #speed-select {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 8px; background: white; cursor: pointer; color: var(--text-dark);
+  }
+  #play-btn {
+    background: white; border: 1px solid var(--border); border-radius: 20px;
+    padding: 6px 16px; font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--text-dark); cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: background 0.15s;
+  }
+  #play-btn:hover { background: #eee; }
+  #play-btn.active { background: #1a1a2e; color: white; }
+
+  #step-panel {
+    position: fixed;
+    background: white; border: 1px solid var(--border); border-radius: 14px;
+    padding: 10px 14px 10px 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+    z-index: 300; max-width: 260px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s, top 0.35s cubic-bezier(.4,0,.2,1), left 0.35s cubic-bezier(.4,0,.2,1);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  #step-badge {
+    flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 15px;
+    color: white; line-height: 1;
+    transition: background 0.25s;
+  }
+  #step-panel .step-body { display: flex; flex-direction: column; gap: 3px; padding-top: 2px; }
+  #step-panel .step-num { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text-light); letter-spacing: 0.1em; }
+  #step-panel .step-desc { font-size: 12px; font-weight: 500; color: var(--text-dark); line-height: 1.45; }
+
   #legend {
     position: fixed; bottom: 18px; left: 24px;
-    background: white; border: 1px solid var(--border);
-    border-radius: 12px; padding: 12px 16px;
-    display: flex; flex-direction: column; gap: 7px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    z-index: 100;
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 16px; display: flex; flex-direction: column; gap: 7px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); z-index: 100;
   }
-  #legend .leg-title {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px; letter-spacing: 0.1em;
-    color: var(--text-light); text-transform: uppercase;
-    margin-bottom: 2px;
-  }
-  .leg-item {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 11px; color: var(--text-mid);
-  }
-  .leg-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .leg-title { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: var(--text-light); text-transform: uppercase; margin-bottom: 2px; }
+  .leg-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-mid); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-  /* ── HINT ── */
   #hint {
     position: fixed; bottom: 18px; right: 24px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px; color: var(--text-light);
-    background: white; border: 1px solid var(--border);
-    padding: 8px 14px; border-radius: 20px;
-    letter-spacing: 0.06em;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    pointer-events: none;
-    transition: opacity 1.2s;
+    font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-light);
+    background: white; border: 1px solid var(--border); padding: 8px 14px;
+    border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    pointer-events: none; transition: opacity 1.2s;
   }
 
-  /* ── SVG ── */
   svg { width: 100%; height: 100%; }
 
-  .link {
-    fill: none;
-    stroke: #c8c4bc;
-    stroke-width: 1.5px;
-    stroke-dasharray: none;
-  }
-  .link.dashed {
-    stroke-dasharray: 5,4;
-    stroke: #d0ccc5;
-  }
-  .link-arrow { fill: #bbb8b0; }
-
+  .link { fill: none; stroke: #d4d0c8; stroke-width: 2px; }
+  .link.dashed { stroke-dasharray: 5,4; stroke: #d8d4cc; }
   .node { cursor: pointer; }
+  .node circle { transition: filter 0.2s, stroke-width 0.2s; }
+  .node:hover circle { filter: brightness(0.88); stroke-width: 2.5px !important; }
+  .node text { pointer-events: none; dominant-baseline: middle; text-anchor: middle; font-family: 'DM Sans', sans-serif; font-weight: 500; fill: white; }
+  .particle { pointer-events: none; }
 
-  .node circle {
-    transition: r 0.35s cubic-bezier(.34,1.56,.64,1),
-                filter 0.2s, stroke-width 0.2s;
-  }
-  .node:hover circle {
-    filter: brightness(0.92);
-    stroke-width: 2.5px !important;
-  }
-
-  .node text {
-    pointer-events: none;
-    dominant-baseline: middle;
-    text-anchor: middle;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    fill: white;
-  }
-
-  /* Loop arrow label */
-  .loop-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    fill: var(--text-light);
-    text-anchor: middle;
-    pointer-events: none;
-  }
-
-  /* Tooltip */
   #tooltip {
-    position: fixed; pointer-events: none;
-    background: white; border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 14px;
-    font-size: 12px; line-height: 1.5;
-    max-width: 220px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    opacity: 0; transition: opacity 0.15s;
-    z-index: 200;
+    position: fixed; pointer-events: none; background: white;
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
+    font-size: 12px; line-height: 1.5; max-width: 220px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.15s; z-index: 200;
   }
-  #tooltip .tt-title {
-    font-weight: 600; font-size: 13px; margin-bottom: 3px;
-  }
-  #tooltip .tt-desc {
-    color: var(--text-mid); font-size: 11px;
-  }
+  #tooltip .tt-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+  #tooltip .tt-desc { color: var(--text-mid); font-size: 11px; }
 </style>
 </head>
 <body>
 
 <div id="header">
   <h1>AI Agent — Execution Flow</h1>
-  <span>// click nodes to expand · drag to reposition</span>
+  <span>// click ▶ play to animate · click nodes to expand</span>
+</div>
+
+<div id="controls">
+  <label>speed</label>
+  <select id="speed-select">
+    <option value="2.2">slow</option>
+    <option value="1.2" selected>normal</option>
+    <option value="0.6">fast</option>
+  </select>
+  <button id="play-btn">▶ play flow</button>
+</div>
+
+<div id="step-panel">
+  <div id="step-badge">1</div>
+  <div class="step-body">
+    <div class="step-num" id="step-num">STEP 1 / 10</div>
+    <div class="step-desc" id="step-desc"></div>
+  </div>
 </div>
 
 <div id="legend">
@@ -166,23 +145,19 @@
   <div class="leg-item"><div class="leg-dot" style="background:#3b5bdb"></div>Input / Perception</div>
   <div class="leg-item"><div class="leg-dot" style="background:#1c7ed6"></div>LLM Core</div>
   <div class="leg-item"><div class="leg-dot" style="background:#7048e8"></div>Memory</div>
-  <div class="leg-item"><div class="leg-dot" style="background:#0ca678"></div>Tools / Actions</div>
-  <div class="leg-item"><div class="leg-dot" style="background:#f08c00"></div>Planning</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#f08c00"></div>Planning / Routing</div>
   <div class="leg-item"><div class="leg-dot" style="background:#d6336c"></div>Execution</div>
   <div class="leg-item"><div class="leg-dot" style="background:#2b8a3e"></div>Output</div>
   <div class="leg-item"><div class="leg-dot" style="background:#862e9c"></div>Human-in-loop</div>
 </div>
 
-<div id="hint">click a node to expand details · click background to reset</div>
+<div id="hint">▶ play flow to animate data · click nodes to expand</div>
 <div id="tooltip"></div>
 
 <svg id="canvas">
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#bbb8b0"/>
-    </marker>
-    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L0,6 L8,3 z" fill="#3b5bdb88"/>
+      <path d="M0,0 L0,6 L8,3 z" fill="#c0bbb0"/>
     </marker>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.10)"/>
@@ -190,9 +165,14 @@
     <filter id="shadow-lg" x="-30%" y="-30%" width="160%" height="160%">
       <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="rgba(0,0,0,0.13)"/>
     </filter>
+    <filter id="particle-glow" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
   <rect id="bg-rect" width="100%" height="100%" fill="transparent"/>
   <g id="links-layer"></g>
+  <g id="particles-layer"></g>
   <g id="nodes-layer"></g>
 </svg>
 
@@ -200,140 +180,102 @@
 const W = () => window.innerWidth;
 const H = () => window.innerHeight;
 
-// ── NODES ─────────────────────────────────────────────────────────────────────
-// depth 0 = always visible main flow
-// depth 1 = children, shown when parent expanded
-
+// ── DATA ──────────────────────────────────────────────────────────────────────
 const NODES = [
-  // ── MAIN FLOW (depth 0)
-  {
-    id: "input",    label: "User\nInput",      r: 38, color: "#3b5bdb", depth: 0,
-    desc: "Receives natural language queries, commands, or multimodal data from the user or upstream systems."
-  },
-  {
-    id: "context",  label: "Context\nBuilder",  r: 34, color: "#3b5bdb", depth: 0,
-    desc: "Assembles the full prompt: system instructions, conversation history, retrieved memory, and tool schemas."
-  },
-  {
-    id: "llm",      label: "LLM\nReasoner",     r: 48, color: "#1c7ed6", depth: 0,
-    desc: "The core language model. Reads context, decides next action: answer directly, call a tool, or plan sub-tasks."
-  },
-  {
-    id: "router",   label: "Output\nRouter",    r: 34, color: "#f08c00", depth: 0,
-    desc: "Classifies the LLM's response type: final answer, tool call, sub-agent delegation, or human escalation."
-  },
-  {
-    id: "executor", label: "Tool\nExecutor",    r: 38, color: "#d6336c", depth: 0,
-    desc: "Runs the requested tool or API call, captures the result, and feeds it back into the observation loop."
-  },
-  {
-    id: "output",   label: "Final\nOutput",     r: 38, color: "#2b8a3e", depth: 0,
-    desc: "Formats and delivers the final response: text, structured data, actions taken, or a handoff to the user."
-  },
-  {
-    id: "memory",   label: "Memory\nStore",     r: 36, color: "#7048e8", depth: 0,
-    desc: "Persists information across turns. Includes short-term (context window), episodic (past sessions), and semantic (vector) memory."
-  },
-  {
-    id: "human",    label: "Human\nReview",     r: 30, color: "#862e9c", depth: 0,
-    desc: "Human-in-the-loop checkpoint. Triggered when confidence is low, actions are irreversible, or policy requires approval."
-  },
-
-  // ── CHILDREN of context
-  {
-    id: "sys_prompt",  label: "System\nPrompt",    r: 22, color: "#4c72e0", depth: 1, parent: "context",
-    desc: "Defines the agent's persona, constraints, available tools, and behavioral rules."
-  },
-  {
-    id: "history",     label: "Chat\nHistory",     r: 22, color: "#4c72e0", depth: 1, parent: "context",
-    desc: "Prior turns in the conversation, truncated or summarized to fit the context window."
-  },
-  {
-    id: "retrieval",   label: "RAG\nRetrieval",    r: 24, color: "#4c72e0", depth: 1, parent: "context",
-    desc: "Relevant documents or facts fetched from a vector store via semantic similarity search."
-  },
-
-  // ── CHILDREN of llm
-  {
-    id: "cot",      label: "Chain of\nThought",   r: 24, color: "#2d9be0", depth: 1, parent: "llm",
-    desc: "Step-by-step reasoning trace produced before the final answer. Improves accuracy on complex tasks."
-  },
-  {
-    id: "fc",       label: "Function\nCalling",   r: 24, color: "#2d9be0", depth: 1, parent: "llm",
-    desc: "Structured output specifying which tool to invoke, with typed arguments parsed from the prompt."
-  },
-  {
-    id: "reflect",  label: "Self-\nReflection",   r: 22, color: "#2d9be0", depth: 1, parent: "llm",
-    desc: "The model critiques its own draft answer and iterates before outputting — improves factual accuracy."
-  },
-
-  // ── CHILDREN of executor
-  {
-    id: "web",      label: "Web\nSearch",         r: 22, color: "#e03060", depth: 1, parent: "executor",
-    desc: "Queries search engines or scrapes URLs to retrieve real-time information."
-  },
-  {
-    id: "code",     label: "Code\nInterpreter",   r: 22, color: "#e03060", depth: 1, parent: "executor",
-    desc: "Executes Python or JS code in a sandbox. Used for data analysis, calculations, and file manipulation."
-  },
-  {
-    id: "api",      label: "External\nAPIs",      r: 22, color: "#e03060", depth: 1, parent: "executor",
-    desc: "REST / GraphQL calls to third-party services: databases, CRMs, IoT endpoints, or internal tools."
-  },
-  {
-    id: "subagent", label: "Sub-\nAgent",         r: 24, color: "#e03060", depth: 1, parent: "executor",
-    desc: "Delegates a sub-task to a specialized agent. Enables multi-agent orchestration and parallel execution."
-  },
-
-  // ── CHILDREN of memory
-  {
-    id: "stm",      label: "Short-term\nContext", r: 20, color: "#8b6aee", depth: 1, parent: "memory",
-    desc: "Active context window — the 'working memory' of the current session."
-  },
-  {
-    id: "episodic", label: "Episodic\nMemory",    r: 20, color: "#8b6aee", depth: 1, parent: "memory",
-    desc: "Summaries of past sessions stored externally. Recalled when relevant to current task."
-  },
-  {
-    id: "vector",   label: "Vector\nStore",       r: 22, color: "#8b6aee", depth: 1, parent: "memory",
-    desc: "Embeddings database (e.g. pgvector, Pinecone). Enables semantic similarity search over large corpora."
-  },
+  { id:"input",    label:"User\nInput",      r:38, color:"#3b5bdb", depth:0, desc:"Receives natural language queries, commands, or multimodal data from the user or upstream systems." },
+  { id:"context",  label:"Context\nBuilder", r:34, color:"#3b5bdb", depth:0, desc:"Assembles the full prompt: system instructions, conversation history, retrieved memory, and tool schemas." },
+  { id:"llm",      label:"LLM\nReasoner",    r:48, color:"#1c7ed6", depth:0, desc:"The core language model. Reads context, decides next action: answer directly, call a tool, or plan sub-tasks." },
+  { id:"router",   label:"Output\nRouter",   r:34, color:"#f08c00", depth:0, desc:"Classifies the LLM's response type: final answer, tool call, sub-agent delegation, or human escalation." },
+  { id:"executor", label:"Tool\nExecutor",   r:38, color:"#d6336c", depth:0, desc:"Runs the requested tool or API call, captures the result, and feeds it back into the observation loop." },
+  { id:"output",   label:"Final\nOutput",    r:38, color:"#2b8a3e", depth:0, desc:"Formats and delivers the final response: text, structured data, actions taken, or a handoff to the user." },
+  { id:"memory",   label:"Memory\nStore",    r:36, color:"#7048e8", depth:0, desc:"Persists information across turns. Includes short-term, episodic, and semantic (vector) memory." },
+  { id:"human",    label:"Human\nReview",    r:30, color:"#862e9c", depth:0, desc:"Human-in-the-loop checkpoint. Triggered when confidence is low or actions are irreversible." },
+  // children — context
+  { id:"sys_prompt", label:"System\nPrompt", r:22, color:"#4c72e0", depth:1, parent:"context", desc:"Defines the agent's persona, constraints, available tools, and behavioral rules." },
+  { id:"history",    label:"Chat\nHistory",  r:22, color:"#4c72e0", depth:1, parent:"context", desc:"Prior turns in the conversation, truncated or summarized to fit the context window." },
+  { id:"retrieval",  label:"RAG\nRetrieval", r:24, color:"#4c72e0", depth:1, parent:"context", desc:"Relevant documents fetched from a vector store via semantic similarity search." },
+  // children — llm
+  { id:"cot",     label:"Chain of\nThought", r:24, color:"#2d9be0", depth:1, parent:"llm", desc:"Step-by-step reasoning trace produced before the final answer." },
+  { id:"fc",      label:"Function\nCalling", r:24, color:"#2d9be0", depth:1, parent:"llm", desc:"Structured output specifying which tool to invoke, with typed arguments." },
+  { id:"reflect", label:"Self-\nReflection", r:22, color:"#2d9be0", depth:1, parent:"llm", desc:"The model critiques its own draft and iterates before outputting." },
+  // children — executor
+  { id:"web",      label:"Web\nSearch",       r:22, color:"#e03060", depth:1, parent:"executor", desc:"Queries search engines to retrieve real-time information." },
+  { id:"code",     label:"Code\nInterpreter", r:22, color:"#e03060", depth:1, parent:"executor", desc:"Executes code in a sandbox for data analysis and calculations." },
+  { id:"api",      label:"External\nAPIs",    r:22, color:"#e03060", depth:1, parent:"executor", desc:"REST/GraphQL calls to third-party services and internal tools." },
+  { id:"subagent", label:"Sub-\nAgent",       r:24, color:"#e03060", depth:1, parent:"executor", desc:"Delegates a sub-task to a specialized agent — multi-agent orchestration." },
+  // children — memory
+  { id:"stm",      label:"Short-term\nCtx",   r:20, color:"#8b6aee", depth:1, parent:"memory", desc:"Active context window — the working memory of the current session." },
+  { id:"episodic", label:"Episodic\nMemory",  r:20, color:"#8b6aee", depth:1, parent:"memory", desc:"Summaries of past sessions stored externally, recalled when relevant." },
+  { id:"vector",   label:"Vector\nStore",     r:22, color:"#8b6aee", depth:1, parent:"memory", desc:"Embeddings DB enabling semantic similarity search over large corpora." },
 ];
 
-// ── LINKS ─────────────────────────────────────────────────────────────────────
 const LINKS = [
-  // Main flow
-  { source: "input",    target: "context",  type: "flow" },
-  { source: "context",  target: "llm",      type: "flow" },
-  { source: "llm",      target: "router",   type: "flow" },
-  { source: "router",   target: "executor", type: "flow", label: "tool call" },
-  { source: "router",   target: "output",   type: "flow", label: "answer" },
-  { source: "router",   target: "human",    type: "flow", label: "escalate" },
-  { source: "executor", target: "context",  type: "feedback", label: "observation" },
-  { source: "memory",   target: "context",  type: "support" },
-  { source: "executor", target: "memory",   type: "support" },
-  { source: "output",   target: "memory",   type: "support" },
+  { source:"input",    target:"context",  type:"flow" },
+  { source:"context",  target:"llm",      type:"flow" },
+  { source:"llm",      target:"router",   type:"flow" },
+  { source:"router",   target:"executor", type:"flow" },
+  { source:"router",   target:"output",   type:"flow" },
+  { source:"router",   target:"human",    type:"flow" },
+  { source:"executor", target:"context",  type:"feedback" },
+  { source:"memory",   target:"context",  type:"support" },
+  { source:"executor", target:"memory",   type:"support" },
+  { source:"output",   target:"memory",   type:"support" },
+  { source:"context",  target:"sys_prompt", type:"child" },
+  { source:"context",  target:"history",    type:"child" },
+  { source:"context",  target:"retrieval",  type:"child" },
+  { source:"llm",      target:"cot",        type:"child" },
+  { source:"llm",      target:"fc",         type:"child" },
+  { source:"llm",      target:"reflect",    type:"child" },
+  { source:"executor", target:"web",        type:"child" },
+  { source:"executor", target:"code",       type:"child" },
+  { source:"executor", target:"api",        type:"child" },
+  { source:"executor", target:"subagent",   type:"child" },
+  { source:"memory",   target:"stm",        type:"child" },
+  { source:"memory",   target:"episodic",   type:"child" },
+  { source:"memory",   target:"vector",     type:"child" },
+];
 
-  // Children — context
-  { source: "context", target: "sys_prompt", type: "child" },
-  { source: "context", target: "history",    type: "child" },
-  { source: "context", target: "retrieval",  type: "child" },
+// Each animation step: edges to animate, nodes to pulse, label
+const FLOW_STEPS = [
+  { label:"① User sends a query",
+    edges:[],
+    active:["input"], color:"#3b5bdb" },
 
-  // Children — llm
-  { source: "llm", target: "cot",     type: "child" },
-  { source: "llm", target: "fc",      type: "child" },
-  { source: "llm", target: "reflect", type: "child" },
+  { label:"② Input → Context Builder assembles the prompt",
+    edges:[["input","context"]],
+    active:["input","context"], color:"#3b5bdb" },
 
-  // Children — executor
-  { source: "executor", target: "web",      type: "child" },
-  { source: "executor", target: "code",     type: "child" },
-  { source: "executor", target: "api",      type: "child" },
-  { source: "executor", target: "subagent", type: "child" },
+  { label:"③ Memory recalled & injected into context",
+    edges:[["memory","context"]],
+    active:["memory","context"], color:"#7048e8" },
 
-  // Children — memory
-  { source: "memory", target: "stm",      type: "child" },
-  { source: "memory", target: "episodic", type: "child" },
-  { source: "memory", target: "vector",   type: "child" },
+  { label:"④ Full context sent to LLM Reasoner",
+    edges:[["context","llm"]],
+    active:["context","llm"], color:"#1c7ed6" },
+
+  { label:"⑤ LLM reasons → decides to call a tool",
+    edges:[["llm","router"]],
+    active:["llm","router"], color:"#f08c00" },
+
+  { label:"⑥ Router dispatches tool call to Executor",
+    edges:[["router","executor"]],
+    active:["router","executor"], color:"#d6336c" },
+
+  { label:"⑦ Tool result flows back → appended to Context as an observation",
+    edges:[["executor","context"]],
+    active:["executor","context"], color:"#d6336c" },
+
+  { label:"⑧ Updated context (now with observation) re-sent to LLM — this is what triggers the next reasoning step",
+    edges:[["context","llm"]],
+    active:["context","llm"], color:"#1c7ed6" },
+
+  { label:"⑨ LLM reads observation, decides answer is ready → routes to Output",
+    edges:[["llm","router"],["router","output"]],
+    active:["llm","router","output"], color:"#2b8a3e" },
+
+  { label:"⑩ Observation & final answer saved to Memory for future turns",
+    edges:[["executor","memory"],["output","memory"]],
+    active:["executor","memory","output"], color:"#7048e8" },
 ];
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -346,93 +288,73 @@ function isVisible(n) {
   return expandedNodes.has(n.parent);
 }
 
-// ── INITIAL POSITIONS (loose circle layout for depth-0) ──────────────────────
 function initPositions() {
-  const d0 = NODES.filter(n => n.depth === 0);
-  const cx = W() / 2, cy = H() / 2;
-  // Place main flow nodes in a loose ellipse
-  const positions = {
-    input:    { x: cx - 340, y: cy },
-    context:  { x: cx - 180, y: cy - 100 },
-    llm:      { x: cx,       y: cy },
-    router:   { x: cx + 170, y: cy - 60 },
-    executor: { x: cx + 170, y: cy + 100 },
-    output:   { x: cx + 340, y: cy },
-    memory:   { x: cx - 60,  y: cy + 180 },
-    human:    { x: cx + 340, y: cy - 160 },
+  const cx = W()/2, cy = H()/2;
+  const pos = {
+    input:    {x:cx-360, y:cy},
+    context:  {x:cx-185, y:cy-85},
+    llm:      {x:cx,     y:cy},
+    router:   {x:cx+175, y:cy-65},
+    executor: {x:cx+175, y:cy+110},
+    output:   {x:cx+360, y:cy},
+    memory:   {x:cx-50,  y:cy+190},
+    human:    {x:cx+355, y:cy-155},
   };
-  d0.forEach(n => {
-    if (positions[n.id]) { n.x = positions[n.id].x; n.y = positions[n.id].y; }
-    else { n.x = cx; n.y = cy; }
+  NODES.filter(n=>n.depth===0).forEach(n => {
+    if(pos[n.id]){n.x=pos[n.id].x; n.y=pos[n.id].y;}
+    else{n.x=cx; n.y=cy;}
   });
 }
 initPositions();
 
-// ── D3 SETUP ──────────────────────────────────────────────────────────────────
-const svg = d3.select("#canvas");
-const linksLayer = svg.select("#links-layer");
-const nodesLayer = svg.select("#nodes-layer");
+// ── D3 ────────────────────────────────────────────────────────────────────────
+const svg          = d3.select("#canvas");
+const linksLayer    = svg.select("#links-layer");
+const particlesLayer = svg.select("#particles-layer");
+const nodesLayer   = svg.select("#nodes-layer");
 const tooltip = document.getElementById("tooltip");
+const stepPanel = document.getElementById("step-panel");
 
 const simulation = d3.forceSimulation()
-  .force("link", d3.forceLink().id(d => d.id).distance(d => {
-    const s = nodeById[d.source.id || d.source];
-    const t = nodeById[d.target.id || d.target];
-    if (!s || !t) return 120;
-    const base = (s.r + t.r) * 1.5;
-    if (d.type === "child") return base * 0.9;
-    return base + 20;
-  }).strength(d => d.type === "child" ? 0.6 : 0.3))
-  .force("charge", d3.forceManyBody().strength(d => -(d.r ** 2) * 0.7))
-  .force("collide", d3.forceCollide().radius(d => d.r + 18).strength(0.85))
+  .force("link", d3.forceLink().id(d=>d.id).distance(d=>{
+    const s=nodeById[d.source.id||d.source], t=nodeById[d.target.id||d.target];
+    if(!s||!t) return 120;
+    const base=(s.r+t.r)*1.5;
+    return d.type==="child" ? base*0.85 : base+20;
+  }).strength(d=>d.type==="child"?0.6:0.3))
+  .force("charge", d3.forceManyBody().strength(d=>-(d.r**2)*0.7))
+  .force("collide", d3.forceCollide().radius(d=>d.r+16).strength(0.85))
   .alphaDecay(0.025)
   .on("tick", ticked);
-
-// Fix depth-0 nodes initially
-function applyFixedPositions() {
-  NODES.filter(n => n.depth === 0).forEach(n => {
-    // We don't pin them — let them be semi-free but return to init
-  });
-}
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function render() {
   const visNodes = NODES.filter(isVisible);
-  const visIds = new Set(visNodes.map(n => n.id));
-
-  const visLinks = LINKS.filter(l => {
-    const sid = l.source.id || l.source;
-    const tid = l.target.id || l.target;
-    return visIds.has(sid) && visIds.has(tid);
+  const visIds   = new Set(visNodes.map(n=>n.id));
+  const visLinks = LINKS.filter(l=>{
+    const s=l.source.id||l.source, t=l.target.id||l.target;
+    return visIds.has(s) && visIds.has(t);
   });
 
-  // ── LINKS
-  const linkSel = linksLayer.selectAll(".link-group")
-    .data(visLinks, d => `${d.source.id||d.source}→${d.target.id||d.target}`);
+  // links
+  const lSel = linksLayer.selectAll(".link-group")
+    .data(visLinks, d=>`${d.source.id||d.source}→${d.target.id||d.target}`);
+  lSel.exit().transition().duration(250).style("opacity",0).remove();
+  const lEnter = lSel.enter().append("g").attr("class","link-group").style("opacity",0);
+  lEnter.append("line")
+    .attr("class", d=>"link"+(d.type==="feedback"||d.type==="support"?" dashed":""))
+    .attr("marker-end", d=>d.type!=="child"?"url(#arrow)":null);
+  lEnter.transition().duration(400).style("opacity",1);
 
-  linkSel.exit().transition().duration(250).style("opacity", 0).remove();
+  // nodes
+  const nSel = nodesLayer.selectAll(".node")
+    .data(visNodes, d=>d.id);
+  nSel.exit().transition().duration(250).style("opacity",0).on("end",function(){d3.select(this).remove();});
 
-  const linkEnter = linkSel.enter().append("g")
-    .attr("class", "link-group")
-    .style("opacity", 0);
-
-  linkEnter.append("line")
-    .attr("class", d => "link" + (d.type === "feedback" || d.type === "support" ? " dashed" : ""))
-    .attr("marker-end", d => d.type !== "child" ? "url(#arrow)" : null);
-
-  linkEnter.transition().duration(400).style("opacity", 1);
-
-  // ── NODES
-  const nodeSel = nodesLayer.selectAll(".node")
-    .data(visNodes, d => d.id);
-
-  nodeSel.exit().transition().duration(250)
-    .style("opacity", 0)
-    .on("end", function() { d3.select(this).remove(); });
-
-  const nodeEnter = nodeSel.enter().append("g")
-    .attr("class", "node")
-    .style("opacity", 0)
+  const nEnter = nSel.enter().append("g")
+    .attr("class","node")
+    .attr("data-id", d=>d.id)
+    .style("opacity",0)
     .call(d3.drag()
       .on("start", dragStart)
       .on("drag",  dragged)
@@ -441,149 +363,268 @@ function render() {
     .on("mouseover", onHover)
     .on("mouseout",  onHoverOut);
 
-  nodeEnter.append("circle")
-    .attr("r", 0)
-    .attr("fill", d => d.color)
-    .attr("stroke", d => "white")
-    .attr("stroke-width", 2)
-    .style("filter", d => d.depth === 0 ? "url(#shadow-lg)" : "url(#shadow)");
+  nEnter.append("circle")
+    .attr("r",0)
+    .attr("fill", d=>d.color)
+    .attr("stroke","white")
+    .attr("stroke-width",2)
+    .style("filter", d=>d.depth===0?"url(#shadow-lg)":"url(#shadow)");
 
-  nodeEnter.append("text");
+  nEnter.append("text");
 
-  // Animate in
-  nodeEnter.transition().duration(450).delay((_, i) => i * 25)
-    .style("opacity", 1)
-    .select("circle").attr("r", d => d.r);
+  nEnter.transition().duration(450).delay((_,i)=>i*25)
+    .style("opacity",1)
+    .select("circle").attr("r", d=>d.r);
 
-  // Update text on all nodes
-  nodesLayer.selectAll(".node text").each(function(d) {
-    const lines = d.label.split("\n");
-    const el = d3.select(this);
+  // text
+  nodesLayer.selectAll(".node text").each(function(d){
+    const lines=d.label.split("\n"), el=d3.select(this);
     el.selectAll("*").remove();
-    const fs = Math.max(9, Math.min(14, d.r * 0.31));
-    el.attr("font-size", fs);
-    if (lines.length === 1) {
-      el.text(d.label);
-    } else {
-      lines.forEach((line, i) => {
-        el.append("tspan")
-          .attr("x", 0)
-          .attr("dy", i === 0 ? -(lines.length - 1) * fs * 0.55 : fs * 1.15)
-          .text(line);
-      });
+    const fs=Math.max(9,Math.min(14,d.r*0.31));
+    el.attr("font-size",fs);
+    if(lines.length===1){ el.text(d.label); }
+    else {
+      lines.forEach((line,i)=>
+        el.append("tspan").attr("x",0)
+          .attr("dy", i===0 ? -(lines.length-1)*fs*0.55 : fs*1.15)
+          .text(line));
     }
   });
 
-  // Update expand indicator (ring on expandable nodes)
-  nodesLayer.selectAll(".node").each(function(d) {
-    const hasChildren = NODES.some(n => n.parent === d.id);
-    const isExpanded = expandedNodes.has(d.id);
-    const g = d3.select(this);
-
+  // expand rings
+  nodesLayer.selectAll(".node").each(function(d){
+    const hasKids=NODES.some(n=>n.parent===d.id);
+    const expanded=expandedNodes.has(d.id);
+    const g=d3.select(this);
     g.selectAll(".expand-ring").remove();
-    if (hasChildren) {
-      g.insert("circle", "circle")
-        .attr("class", "expand-ring")
-        .attr("r", d.r + 6)
-        .attr("fill", "none")
-        .attr("stroke", isExpanded ? d.color : "#ccc")
-        .attr("stroke-width", isExpanded ? 2 : 1)
-        .attr("stroke-dasharray", isExpanded ? "none" : "4,3")
-        .style("pointer-events", "none");
+    if(hasKids){
+      g.insert("circle","circle")
+        .attr("class","expand-ring")
+        .attr("r",d.r+6).attr("fill","none")
+        .attr("stroke", expanded?d.color:"#ccc")
+        .attr("stroke-width", expanded?2:1)
+        .attr("stroke-dasharray", expanded?"none":"4,3")
+        .style("pointer-events","none");
     }
   });
 
-  // Sync simulation
   simulation.nodes(visNodes);
   simulation.force("link").links(visLinks);
   simulation.alpha(0.45).restart();
 }
 
 function ticked() {
-  linksLayer.selectAll(".link-group").each(function(d) {
-    const sx = d.source.x || 0, sy = d.source.y || 0;
-    const tx = d.target.x || 0, ty = d.target.y || 0;
-
-    // Shorten endpoints to circle edge
-    const dx = tx - sx, dy = ty - sy;
-    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-    const sr = (nodeById[d.source.id || d.source]?.r || 20);
-    const tr = (nodeById[d.target.id || d.target]?.r || 20);
-    const x1 = sx + dx / dist * sr;
-    const y1 = sy + dy / dist * sr;
-    const x2 = tx - dx / dist * (tr + 8);
-    const y2 = ty - dy / dist * (tr + 8);
-
+  linksLayer.selectAll(".link-group").each(function(d){
+    const sx=d.source.x||0, sy=d.source.y||0;
+    const tx=d.target.x||0, ty=d.target.y||0;
+    const dx=tx-sx, dy=ty-sy, dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const sr=nodeById[d.source.id||d.source]?.r||20;
+    const tr=nodeById[d.target.id||d.target]?.r||20;
     d3.select(this).select("line")
-      .attr("x1", x1).attr("y1", y1)
-      .attr("x2", x2).attr("y2", y2);
+      .attr("x1",sx+dx/dist*sr).attr("y1",sy+dy/dist*sr)
+      .attr("x2",tx-dx/dist*(tr+8)).attr("y2",ty-dy/dist*(tr+8));
   });
-
-  nodesLayer.selectAll(".node")
-    .attr("transform", d => `translate(${d.x||0},${d.y||0})`);
+  nodesLayer.selectAll(".node").attr("transform", d=>`translate(${d.x||0},${d.y||0})`);
 }
 
-// ── INTERACTIONS ──────────────────────────────────────────────────────────────
-function onNodeClick(event, d) {
-  event.stopPropagation();
-  const hasChildren = NODES.some(n => n.parent === d.id);
-  if (!hasChildren) return;
+// ── PARTICLE ENGINE ───────────────────────────────────────────────────────────
+function getSpeed() { return parseFloat(document.getElementById("speed-select").value) * 1000; }
 
-  if (expandedNodes.has(d.id)) {
-    collapseNode(d.id);
+function easeInOut(t) { return t<0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+function ripple(nodeId, color) {
+  const n = nodeById[nodeId];
+  if (!n) return;
+  particlesLayer.append("circle")
+    .attr("cx", n.x||0).attr("cy", n.y||0)
+    .attr("r", n.r).attr("fill","none")
+    .attr("stroke", color).attr("stroke-width",3).attr("opacity",0.85)
+    .transition().duration(650).ease(d3.easeCubicOut)
+    .attr("r", n.r+24).attr("stroke-width",0.5).attr("opacity",0)
+    .on("end", function(){d3.select(this).remove();});
+}
+
+function brightNode(nodeId) {
+  nodesLayer.selectAll(".node").each(function(d){
+    if(d.id!==nodeId) return;
+    d3.select(this).select("circle")
+      .transition().duration(180).style("filter","brightness(1.3)")
+      .transition().duration(700).style("filter", d.depth===0?"url(#shadow-lg)":"url(#shadow)");
+  });
+}
+
+function fireParticle(srcId, tgtId, color, delayMs=0) {
+  const src=nodeById[srcId], tgt=nodeById[tgtId];
+  if(!src||!tgt) return;
+  const speed=getSpeed();
+  const dur=Math.max(350, speed*0.55);
+
+  setTimeout(()=>{
+    const sx=src.x||0, sy=src.y||0, tx=tgt.x||0, ty=tgt.y||0;
+    const dx=tx-sx, dy=ty-sy, dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const x1=sx+dx/dist*src.r, y1=sy+dy/dist*src.r;
+    const x2=tx-dx/dist*(tgt.r+4), y2=ty-dy/dist*(tgt.r+4);
+
+    const g=particlesLayer.append("g").attr("class","particle");
+
+    // glow halo
+    g.append("circle").attr("r",9).attr("fill",color).attr("opacity",0.2)
+      .style("filter","url(#particle-glow)");
+    // core
+    const dot=g.append("circle").attr("r",5).attr("fill",color).attr("opacity",1);
+    // small trail circles
+    const trail1=g.append("circle").attr("r",3).attr("fill",color).attr("opacity",0.5);
+    const trail2=g.append("circle").attr("r",2).attr("fill",color).attr("opacity",0.25);
+
+    g.attr("transform",`translate(${x1},${y1})`);
+
+    let trailPos1={x:x1,y:y1}, trailPos2={x:x1,y:y1};
+    const t0=Date.now();
+
+    (function frame(){
+      const elapsed=Date.now()-t0;
+      const progress=Math.min(elapsed/dur,1);
+      const t=easeInOut(progress);
+
+      const cx=x1+(x2-x1)*t, cy=y1+(y2-y1)*t;
+      g.attr("transform",`translate(${cx},${cy})`);
+
+      // fade out near end
+      const fade=progress>0.75 ? 1-(progress-0.75)/0.25 : 1;
+      dot.attr("opacity",fade);
+      g.select("circle").attr("opacity",0.2*fade);
+
+      // trail offset (lag behind)
+      const tTrail1=easeInOut(Math.max(0,progress-0.08));
+      const tTrail2=easeInOut(Math.max(0,progress-0.16));
+      trail1.attr("transform",`translate(${x1+(x2-x1)*tTrail1-cx+(cx-cx)},${y1+(y2-y1)*tTrail1-cy})`);
+      trail2.attr("transform",`translate(${x1+(x2-x1)*tTrail2-cx},${y1+(y2-y1)*tTrail2-cy})`);
+
+      if(progress<1){ requestAnimationFrame(frame); }
+      else {
+        g.remove();
+        ripple(tgtId,color);
+        brightNode(tgtId);
+      }
+    })();
+
+    if(delayMs===0){ ripple(srcId,color); brightNode(srcId); }
+  }, delayMs);
+}
+
+function highlightNodes(ids, color) {
+  nodesLayer.selectAll(".node").each(function(d){
+    d3.select(this).select("circle")
+      .transition().duration(300)
+      .attr("stroke", ids.includes(d.id)?color:"white")
+      .attr("stroke-width", ids.includes(d.id)?3:2);
+  });
+}
+
+function resetHighlight() {
+  nodesLayer.selectAll(".node circle")
+    .transition().duration(400).attr("stroke","white").attr("stroke-width",2);
+}
+
+// ── ANIMATION LOOP ────────────────────────────────────────────────────────────
+let animRunning=false, animStep=0, stepTimer=null;
+
+function runStep(idx){
+  if(idx>=FLOW_STEPS.length){ animStep=0; stepTimer=setTimeout(()=>runStep(0), getSpeed()*0.4); return; }
+  const step=FLOW_STEPS[idx];
+  const speed=getSpeed();
+
+  document.getElementById("step-num").textContent=`STEP ${idx+1} / ${FLOW_STEPS.length}`;
+  document.getElementById("step-desc").textContent=step.label.replace(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*/,'');
+  // Update badge: number + color
+  const badgeNum = idx + 1;
+  const badge = document.getElementById("step-badge");
+  badge.textContent = badgeNum;
+  badge.style.background = step.color;
+
+  // Position panel near the primary active node, above or below graph
+  const anchorId = step.active[0];
+  const anchorNode = nodeById[anchorId];
+  const panelW = 280;
+  const margin = 18;
+  const panelTop = margin + 44;
+
+  let panelLeft;
+  if (anchorNode && anchorNode.x != null) {
+    panelLeft = Math.min(Math.max((anchorNode.x || 0) - panelW/2, margin), W() - panelW - margin);
   } else {
-    expandedNodes.add(d.id);
+    panelLeft = W()/2 - panelW/2;
   }
-  d3.select("#hint").style("opacity", 0);
-  render();
+  stepPanel.style.left = panelLeft + 'px';
+  stepPanel.style.top  = panelTop  + 'px';
+  stepPanel.style.opacity = 1;
+
+  highlightNodes(step.active, step.color);
+  step.edges.forEach(([s,t],i)=>fireParticle(s,t,step.color,i*180));
+
+  // step index 7 is the critical re-entry (context→LLM after observation) — linger longer
+  const dwell = (idx === 7) ? speed * 1.9 : speed * 1.15;
+  stepTimer=setTimeout(()=>{ if(animRunning) runStep(idx+1); }, dwell);
 }
 
-function collapseNode(id) {
-  expandedNodes.delete(id);
-  NODES.filter(n => n.parent === id).forEach(c => collapseNode(c.id));
+function startAnim(){
+  animRunning=true;
+  document.getElementById("play-btn").textContent="⏹ stop";
+  document.getElementById("play-btn").classList.add("active");
+  runStep(animStep);
+}
+function stopAnim(){
+  animRunning=false;
+  clearTimeout(stepTimer); animStep=0;
+  resetHighlight();
+  particlesLayer.selectAll("*").remove();
+  stepPanel.style.opacity=0;
+  document.getElementById("play-btn").textContent="▶ play flow";
+  document.getElementById("play-btn").classList.remove("active");
 }
 
-svg.select("#bg-rect").on("click", () => {
-  expandedNodes.clear();
-  render();
+document.getElementById("play-btn").addEventListener("click",()=>{
+  animRunning ? stopAnim() : startAnim();
 });
 
-function onHover(event, d) {
-  tooltip.style.opacity = 1;
-  tooltip.innerHTML = `<div class="tt-title">${d.label.replace("\n", " ")}</div><div class="tt-desc">${d.desc}</div>`;
-  const hasChildren = NODES.some(n => n.parent === d.id);
-  if (hasChildren) {
-    tooltip.innerHTML += `<div style="margin-top:6px;font-size:10px;color:#aaa;font-family:'DM Mono',monospace">${expandedNodes.has(d.id) ? "▾ click to collapse" : "▸ click to expand"}</div>`;
-  }
+// ── NODE INTERACTIONS ─────────────────────────────────────────────────────────
+function onNodeClick(event,d){
+  event.stopPropagation();
+  const hasKids=NODES.some(n=>n.parent===d.id);
+  if(!hasKids) return;
+  if(expandedNodes.has(d.id)) collapseNode(d.id);
+  else expandedNodes.add(d.id);
+  d3.select("#hint").style("opacity",0);
+  render();
+}
+function collapseNode(id){
+  expandedNodes.delete(id);
+  NODES.filter(n=>n.parent===id).forEach(c=>collapseNode(c.id));
+}
+svg.select("#bg-rect").on("click",()=>{ expandedNodes.clear(); render(); });
+
+function onHover(event,d){
+  tooltip.style.opacity=1;
+  tooltip.innerHTML=`<div class="tt-title">${d.label.replace("\n"," ")}</div><div class="tt-desc">${d.desc}</div>`;
+  const hasKids=NODES.some(n=>n.parent===d.id);
+  if(hasKids) tooltip.innerHTML+=`<div style="margin-top:6px;font-size:10px;color:#aaa;font-family:'DM Mono',monospace">${expandedNodes.has(d.id)?"▾ click to collapse":"▸ click to expand"}</div>`;
   moveTip(event);
 }
-function onHoverOut() { tooltip.style.opacity = 0; }
-function moveTip(event) {
-  tooltip.style.left = (event.clientX + 14) + "px";
-  tooltip.style.top  = (event.clientY - 10) + "px";
-}
-document.addEventListener("mousemove", e => {
-  if (tooltip.style.opacity === "1") moveTip(e);
-});
+function onHoverOut(){ tooltip.style.opacity=0; }
+function moveTip(e){ tooltip.style.left=(e.clientX+14)+"px"; tooltip.style.top=(e.clientY-10)+"px"; }
+document.addEventListener("mousemove",e=>{ if(tooltip.style.opacity==="1") moveTip(e); });
 
-// Drag
-function dragStart(event, d) {
-  if (!event.active) simulation.alphaTarget(0.3).restart();
-  d.fx = d.x; d.fy = d.y;
-}
-function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
-function dragEnd(event, d) {
-  if (!event.active) simulation.alphaTarget(0);
-  d.fx = null; d.fy = null;
-}
+function dragStart(event,d){ if(!event.active)simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; }
+function dragged(event,d){ d.fx=event.x; d.fy=event.y; }
+function dragEnd(event,d){ if(!event.active)simulation.alphaTarget(0); d.fx=null; d.fy=null; }
+
+window.addEventListener("resize",()=>{
+  simulation.force("center",d3.forceCenter(W()/2,H()/2).strength(0.02));
+  simulation.alpha(0.2).restart();
+});
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 render();
-
-window.addEventListener("resize", () => {
-  simulation.force("center", d3.forceCenter(W()/2, H()/2).strength(0.02));
-  simulation.alpha(0.2).restart();
-});
 </script>
 </body>
 </html>
