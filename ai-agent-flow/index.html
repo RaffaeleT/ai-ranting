@@ -169,6 +169,12 @@
       <feGaussianBlur stdDeviation="4" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
+    <filter id="expandable-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feFlood flood-color="rgba(0,0,0,0.18)" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
   <rect id="bg-rect" width="100%" height="100%" fill="transparent"/>
   <g id="links-layer"></g>
@@ -391,19 +397,20 @@ function render() {
     }
   });
 
-  // expand rings
+  // expand glow halos (replace dashed rings)
   nodesLayer.selectAll(".node").each(function(d){
     const hasKids=NODES.some(n=>n.parent===d.id);
     const expanded=expandedNodes.has(d.id);
     const g=d3.select(this);
     g.selectAll(".expand-ring").remove();
     if(hasKids){
+      // outer soft glow circle — gives depth/elevation feeling
       g.insert("circle","circle")
         .attr("class","expand-ring")
-        .attr("r",d.r+6).attr("fill","none")
-        .attr("stroke", expanded?d.color:"#ccc")
-        .attr("stroke-width", expanded?2:1)
-        .attr("stroke-dasharray", expanded?"none":"4,3")
+        .attr("r", d.r+10)
+        .attr("fill", expanded ? d.color : "#888")
+        .attr("opacity", expanded ? 0.33 : 0.45)
+        .style("filter","blur(8px)")
         .style("pointer-events","none");
     }
   });
