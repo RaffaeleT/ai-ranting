@@ -108,6 +108,17 @@
   #tooltip .tt-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
   #tooltip .tt-desc { color: var(--text-mid); font-size: 11px; }
 
+  @keyframes expand-ring-pulse {
+    0%, 100% { opacity: var(--ring-opacity); transform: scale(1); }
+    50%       { opacity: calc(var(--ring-opacity) * 0.4); transform: scale(1.18); }
+  }
+
+  .expand-ring {
+    animation: expand-ring-pulse 2.4s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
   #copyright {
     position: fixed; bottom: 14px; right: 20px;
     font-family: 'DM Mono', monospace; font-size: 10px;
@@ -407,11 +418,13 @@ function render() {
     g.selectAll(".expand-ring").remove();
     if(hasKids){
       // outer soft glow circle — gives depth/elevation feeling
+      const ringOpacity = expanded ? 0.33 : 0.45;
       g.insert("circle","circle")
         .attr("class","expand-ring")
         .attr("r", d.r+10)
         .attr("fill", expanded ? d.color : "#888")
-        .attr("opacity", expanded ? 0.33 : 0.45)
+        .attr("opacity", ringOpacity)
+        .style("--ring-opacity", ringOpacity)
         .style("filter","blur(8px)")
         .style("pointer-events","none");
     }
