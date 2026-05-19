@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schema RAG — Architettura e Flusso Informativo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #14171f;
+    --border:    #252a36;
+    --teal-50:   #e1f5ee; --teal-200: #5dcaa5; --teal-600: #0f6e56; --teal-800: #085041;
+    --purple-50: #eeedfe; --purple-200:#afa9ec; --purple-600:#534ab7; --purple-800:#3c3489;
+    --amber-50:  #faeeda; --amber-200:#ef9f27; --amber-600:#854f0b; --amber-800:#633806;
+    --coral-50:  #faece7; --coral-200:#f0997b; --coral-600:#993c1d; --coral-800:#711b13;
+    --gray-200:  #b4b2a9; --gray-600: #5f5e5a;
+    --text:      #e8e6de;
+    --muted:     #7a7870;
+    --font-sans: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  header h1 {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    margin-bottom: 10px;
+  }
+  header h2 {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  header h2 span { color: var(--purple-200); font-weight: 500; }
+
+  .diagram-wrap {
+    width: 100%;
+    max-width: 860px;
+  }
+
+  svg { width: 100%; height: auto; display: block; }
+
+  /* ── Node hover ── */
+  .node { cursor: pointer; }
+  .node rect, .node path { transition: filter 0.15s; }
+  .node:hover rect { filter: brightness(1.15); }
+
+  /* ── Legend ── */
+  .legend {
+    margin-top: 36px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  footer {
+    margin-top: 48px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--gray-600);
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Architettura · Retrieval-Augmented Generation</h1>
+  <h2>Componenti principali e <span>flusso informativo</span></h2>
+</header>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 860 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schema RAG">
+  <title>Schema RAG — Flusso Informativo</title>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <!-- glow filters -->
+    <filter id="glow-teal" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
+    </filter>
+    <filter id="glow-purple" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- ══ BACKGROUND PANELS ══ -->
+  <!-- Runtime zone -->
+  <rect x="20" y="16" width="820" height="420" rx="16"
+        fill="#14171f" stroke="#252a36" stroke-width="1"/>
+  <text x="36" y="36" font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#3a3f52" letter-spacing="0.12em">RUNTIME — FLUSSO ONLINE</text>
+
+  <!-- Ingestion zone -->
+  <rect x="20" y="452" width="820" height="130" rx="16"
+        fill="#111318" stroke="#1e2230" stroke-width="1" stroke-dasharray="6 4"/>
+  <text x="36" y="472" font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#3a3f52" letter-spacing="0.12em">PIPELINE DI INGESTION — OFFLINE / BATCH</text>
+
+  <!-- ══ COMPONENT: Interfaccia ══ -->
+  <g class="node" id="c-interfaccia">
+    <!-- glow halo -->
+    <rect x="306" y="42" width="248" height="64" rx="12"
+          fill="#0f6e56" opacity="0.18" filter="url(#glow-teal)"/>
+    <!-- box -->
+    <rect x="306" y="42" width="248" height="64" rx="10"
+          fill="#0a2820" stroke="#0f6e56" stroke-width="1.2"/>
+    <!-- accent bar -->
+    <rect x="306" y="42" width="6" height="64" rx="4"
+          fill="#5dcaa5"/>
+    <text x="430" y="66" text-anchor="middle"
+          font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="500"
+          fill="#9fe1cb">Interfaccia</text>
+    <text x="430" y="84" text-anchor="middle"
+          font-family="'IBM Plex Mono',monospace" font-size="11"
+          fill="#3a7a60">Chat · Voce · API</text>
+  </g>
+
+  <!-- ══ ARROW: Interfaccia → Orchestratore ══ (lato sinistro, scende) -->
+  <line x1="390" y1="106" x2="390" y2="172"
+        stroke="#534ab7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="330" y="144" font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#534ab7">query utente</text>
+
+  <!-- ══ COMPONENT: Orchestratore ══ -->
+  <g class="node" id="c-orchestratore">
+    <rect x="246" y="172" width="368" height="76" rx="10"
+          fill="#120f2e" stroke="#534ab7" stroke-width="1.2"/>
+    <rect x="246" y="172" width="6" height="76" rx="4" fill="#afa9ec"/>
+    <text x="430" y="200" text-anchor="middle"
+          font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="500"
+          fill="#d0cdf8">Orchestratore</text>
+    <text x="430" y="220" text-anchor="middle"
+          font-family="'IBM Plex Mono',monospace" font-size="11"
+          fill="#534ab7">Routing · Prompt engineering · Gestione contesto</text>
+  </g>
+
+  <!-- ══ ARROW: Orchestratore → Corpus ══ (esce lato sx x=246 y=210, va sinistra poi scende) -->
+  <path d="M 246 210 L 130 210 L 130 280" fill="none"
+        stroke="#854f0b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="80" y="248" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#854f0b">ricerca</text>
+  <text x="80" y="261" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#854f0b">semantica</text>
+
+  <!-- ══ ARROW: Orchestratore → LLM ══ (esce lato dx x=614 y=210, va destra poi scende) -->
+  <path d="M 614 210 L 730 210 L 730 280" fill="none"
+        stroke="#993c1d" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="782" y="248" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#993c1d">prompt</text>
+  <text x="782" y="261" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#993c1d">arricchito</text>
+
+  <!-- ══ COMPONENT: Corpus ══ -->
+  <g class="node" id="c-corpus">
+    <rect x="30" y="280" width="272" height="76" rx="10"
+          fill="#1a1200" stroke="#854f0b" stroke-width="1.2"/>
+    <rect x="30" y="280" width="6" height="76" rx="4" fill="#ef9f27"/>
+    <text x="166" y="308" text-anchor="middle"
+          font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="500"
+          fill="#fac775">Corpus di conoscenza</text>
+    <text x="166" y="328" text-anchor="middle"
+          font-family="'IBM Plex Mono',monospace" font-size="11"
+          fill="#854f0b">Documenti · Embedding · Vector DB</text>
+  </g>
+
+  <!-- ══ ARROW: Corpus → Orchestratore — arriva a metà lato sinistro y=230 ══ -->
+  <path d="M 200 280 L 200 230 L 246 230" fill="none"
+        stroke="#ef9f27" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="210" y="254" text-anchor="start"
+        font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#ef9f27">chunks rilevanti</text>
+
+  <!-- ══ COMPONENT: LLM ══ -->
+  <g class="node" id="c-llm">
+    <rect x="558" y="280" width="272" height="76" rx="10"
+          fill="#1a0800" stroke="#993c1d" stroke-width="1.2"/>
+    <rect x="558" y="280" width="6" height="76" rx="4" fill="#f0997b"/>
+    <text x="694" y="308" text-anchor="middle"
+          font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="500"
+          fill="#f5c4b3">LLM</text>
+    <text x="694" y="328" text-anchor="middle"
+          font-family="'IBM Plex Mono',monospace" font-size="11"
+          fill="#993c1d">Ragionamento · Generazione risposta</text>
+  </g>
+
+  <!-- ══ ARROW: LLM → Orchestratore — arriva a metà lato destro y=230 ══ -->
+  <path d="M 660 280 L 660 230 L 614 230" fill="none"
+        stroke="#f0997b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="668" y="254" text-anchor="start"
+        font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#f0997b">risposta grezza</text>
+
+  <!-- ══ ARROW: Orchestratore → Interfaccia (risposta finale) — lato dx sale ══ -->
+  <path d="M 470 172 L 470 106" fill="none"
+        stroke="#5dcaa5" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="480" y="144" text-anchor="start"
+        font-family="'IBM Plex Mono',monospace" font-size="10"
+        fill="#5dcaa5">risposta finale</text>
+
+  <!-- ══ FLUSSO SINTETICO ══ -->
+  <!-- Step pills -->
+  <!-- 1 Query -->
+  <rect x="36" y="390" width="100" height="32" rx="16"
+        fill="#0a2820" stroke="#0f6e56" stroke-width="1"/>
+  <text x="86" y="411" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#9fe1cb">① query</text>
+  <line x1="136" y1="406" x2="160" y2="406"
+        stroke="#3a3f52" stroke-width="1.2" marker-end="url(#arr)"/>
+  <!-- 2 Orchestratore -->
+  <rect x="162" y="390" width="130" height="32" rx="16"
+        fill="#120f2e" stroke="#534ab7" stroke-width="1"/>
+  <text x="227" y="411" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#d0cdf8">② orchestratore</text>
+  <line x1="292" y1="406" x2="316" y2="406"
+        stroke="#3a3f52" stroke-width="1.2" marker-end="url(#arr)"/>
+  <!-- 3 Retrieval -->
+  <rect x="318" y="390" width="100" height="32" rx="16"
+        fill="#1a1200" stroke="#854f0b" stroke-width="1"/>
+  <text x="368" y="411" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#fac775">③ retrieval</text>
+  <line x1="418" y1="406" x2="442" y2="406"
+        stroke="#3a3f52" stroke-width="1.2" marker-end="url(#arr)"/>
+  <!-- 4 Genera -->
+  <rect x="444" y="390" width="100" height="32" rx="16"
+        fill="#1a0800" stroke="#993c1d" stroke-width="1"/>
+  <text x="494" y="411" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#f5c4b3">④ generazione</text>
+  <line x1="544" y1="406" x2="568" y2="406"
+        stroke="#3a3f52" stroke-width="1.2" marker-end="url(#arr)"/>
+  <!-- 5 Risposta -->
+  <rect x="570" y="390" width="100" height="32" rx="16"
+        fill="#0a2820" stroke="#0f6e56" stroke-width="1"/>
+  <text x="620" y="411" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#9fe1cb">⑤ risposta</text>
+
+  <!-- ══ INGESTION PIPELINE ══ -->
+  <!-- Step 1 -->
+  <rect x="50" y="488" width="140" height="32" rx="6"
+        fill="#18181c" stroke="#3a3f52" stroke-width="1"/>
+  <text x="120" y="509" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#7a7870">Documenti sorgente</text>
+  <line x1="190" y1="504" x2="218" y2="504"
+        stroke="#3a3f52" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- Step 2 -->
+  <rect x="220" y="488" width="180" height="32" rx="6"
+        fill="#18181c" stroke="#3a3f52" stroke-width="1"/>
+  <text x="310" y="509" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#7a7870">Chunking &amp; Embedding</text>
+  <line x1="400" y1="504" x2="428" y2="504"
+        stroke="#3a3f52" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- Step 3 -->
+  <rect x="430" y="488" width="160" height="32" rx="6"
+        fill="#1a1200" stroke="#854f0b" stroke-width="1"/>
+  <text x="510" y="509" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="11" fill="#ef9f27">Vector DB (Corpus)</text>
+
+  <!-- annotation -->
+  <text x="620" y="504" text-anchor="middle"
+        font-family="'IBM Plex Mono',monospace" font-size="10" fill="#3a3f52">una tantum / batch</text>
+
+  <!-- Ingestion → Corpus link dashed -->
+  <path d="M 510 488 L 510 460 L 166 460 L 166 356" fill="none"
+        stroke="#3a3f52" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+</svg>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:#0f6e56"></span>Interfaccia</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#534ab7"></span>Orchestratore</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#854f0b"></span>Corpus di conoscenza</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#993c1d"></span>LLM</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#3a3f52; border: 1px dashed #5a5f72"></span>Pipeline ingestion (offline)</div>
+</div>
+
+<footer>RAG Architecture — generato con Claude · Anthropic &nbsp;|&nbsp; B-NET / bbinternational.com</footer>
+
+</body>
+</html>
