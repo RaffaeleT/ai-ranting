@@ -1,0 +1,12 @@
+- Personas
+  - CEO media azienda, laureato + MBA, no operativo, purpose, strategia di alto livello
+  - imprenditore piccola azienda, diplomato, operativo, strategia operativa, mappa statica
+  - tecnico diplomato, esigenze operative, meno animazioni
+  - senior professional di concetto, laureato, curioso, esplorativo ma funzionale
+  - studente universitario non ingegneristico, curioso
+
+- layer differenti
+- colori
+- analytics
+- meno testo nelle bubbles
+- dimensione font
