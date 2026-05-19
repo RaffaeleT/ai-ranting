@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Costi e benefici della specializzazione LLM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
+      --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
+      --color-bg: #f6f4ff;
+      --color-surface: rgba(255,255,255,.72);
+      --color-surface-2: rgba(255,255,255,.9);
+      --color-border: rgba(64,49,119,.12);
+      --color-text: #1a1730;
+      --color-text-muted: #625d84;
+      --color-text-faint: #8f89b2;
+      --color-primary: #6d3cf2;
+      --color-secondary: #00a8c6;
+      --shadow-lg: 0 20px 60px rgba(35,21,82,.14);
+      --radius-lg: 1rem;
+      --radius-xl: 1.5rem;
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #0f0a2a;
+      --color-surface: rgba(255,255,255,.07);
+      --color-surface-2: rgba(255,255,255,.1);
+      --color-border: rgba(255,255,255,.1);
+      --color-text: #f4f7fb;
+      --color-text-muted: #d3daf0;
+      --color-text-faint: #9aa8cf;
+      --color-primary: #7c3aed;
+      --color-secondary: #06b6d4;
+      --shadow-lg: 0 28px 80px rgba(0,0,0,.35);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+    body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);line-height:1.6;color:var(--color-text);background:radial-gradient(circle at top right, rgba(124,58,237,.18), transparent 22%),radial-gradient(circle at bottom left, rgba(6,182,212,.14), transparent 22%),var(--color-bg)}
+    img,svg{display:block;max-width:100%}
+    button{font:inherit;cursor:pointer;background:none;border:none;color:inherit}
+    .skip-link{position:absolute;left:-9999px;top:auto}.skip-link:focus{left:1rem;top:1rem;z-index:1000;background:var(--color-surface-2);padding:.75rem 1rem;border-radius:.75rem}
+    .shell{max-width:1180px;margin:0 auto;padding:var(--space-6)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);padding-block:var(--space-4) var(--space-8)}
+    .brand{display:flex;align-items:center;gap:var(--space-3)}
+    .logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--color-primary),var(--color-secondary));box-shadow:var(--shadow-lg)}
+    .logo svg{width:24px;height:24px}
+    .eyebrow{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.22em;color:var(--color-text-faint)}
+    .theme-toggle{min-width:44px;min-height:44px;border:1px solid var(--color-border);border-radius:999px;padding:.7rem;background:var(--color-surface)}
+    .hero{padding:var(--space-8) 0 var(--space-10)}
+    .hero h1{font-family:var(--font-display);font-size:var(--text-2xl);line-height:1.02;max-width:11ch;letter-spacing:-.03em}
+    .hero p{margin-top:var(--space-4);max-width:58ch;color:var(--color-text-muted)}
+    .hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:var(--space-6);align-items:end}
+    .badge-row{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-6)}
+    .badge{padding:.65rem 1rem;border-radius:999px;background:var(--color-surface);border:1px solid var(--color-border);font-size:var(--text-sm);color:var(--color-text-muted)}
+    .panel{background:var(--color-surface);backdrop-filter:blur(14px);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg)}
+    .panel-kpi{padding:var(--space-6)}
+    .panel-kpi strong{display:block;font-size:var(--text-sm);text-transform:uppercase;letter-spacing:.16em;color:var(--color-text-faint);margin-bottom:var(--space-2)}
+    .panel-kpi span{font-size:var(--text-xl);font-weight:800;background:linear-gradient(135deg,var(--color-primary),var(--color-secondary));-webkit-background-clip:text;background-clip:text;color:transparent}
+    main{display:grid;gap:var(--space-8);padding-bottom:var(--space-16)}
+    .table-card{padding:var(--space-4);overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:850px}
+    th,td{padding:1rem;vertical-align:top;text-align:left;border-bottom:1px solid var(--color-border)}
+    th{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.12em;color:var(--color-text-faint)}
+    td{font-size:var(--text-sm);color:var(--color-text-muted)}
+    td strong{color:var(--color-text)}
+    .score{display:inline-flex;padding:.42rem .7rem;border-radius:999px;font-size:var(--text-xs);font-weight:700;letter-spacing:.06em}
+    .high{background:rgba(16,185,129,.14);color:#55d6a1}.medium{background:rgba(245,158,11,.14);color:#f5bd58}.slow{background:rgba(239,68,68,.14);color:#ff8b8b}
+    .notes{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-5)}
+    .note{padding:var(--space-5)}
+    .note h2{font-size:var(--text-sm);text-transform:uppercase;letter-spacing:.14em;color:var(--color-text-faint);margin-bottom:var(--space-2)}
+    .note p{color:var(--color-text-muted);max-width:32ch}
+    footer{padding:var(--space-8) 0 var(--space-10);color:var(--color-text-faint);font-size:var(--text-xs)}
+    @media (max-width: 900px){
+      .hero-grid,.notes{grid-template-columns:1fr}
+      .shell{padding:var(--space-4)}
+      .hero h1{max-width:14ch}
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#contenuto">Salta al contenuto</a>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand" aria-label="LLM Strategy">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 8c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v8c0 2.2-1.8 4-4 4h-4c-2.2 0-4-1.8-4-4V8Z"></path>
+            <path d="M9 9h6"></path>
+            <path d="M9 13h6"></path>
+            <path d="M9 17h4"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="eyebrow">Slide 5 · Standalone page</div>
+          <div style="font-weight:700">LLM Cost / Benefit View</div>
+        </div>
+      </div>
+      <button class="theme-toggle" data-theme-toggle aria-label="Switch to light mode">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </header>
+
+    <main id="contenuto">
+      <section class="hero">
+        <div class="hero-grid">
+          <div>
+            <div class="eyebrow">04 · costi / benefici</div>
+            <h1>Confronto costi-benefici della specializzazione LLM</h1>
+            <p>Una pagina unica che trasforma la quinta slide in un formato web leggibile, con tabella comparativa e tre regole pratiche per scegliere tra training, fine-tuning e RAG.</p>
+            <div class="badge-row" role="list" aria-label="Sintesi veloce">
+              <span class="badge">Training = controllo massimo</span>
+              <span class="badge">Fine-tuning = equilibrio</span>
+              <span class="badge">RAG = velocità e modularità</span>
+            </div>
+          </div>
+          <aside class="panel panel-kpi" aria-label="Indicazione sintetica">
+            <strong>Regola pratica</strong>
+            <span>Parti da RAG</span>
+            <p style="margin-top:var(--space-3);color:var(--color-text-muted)">Aggiungi fine-tuning quando serve più specializzazione. Valuta training solo per casi ad alto valore strategico.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="panel table-card" aria-labelledby="tabella-title">
+        <h2 id="tabella-title" class="eyebrow" style="margin:0 0 1rem 1rem">Tabella comparativa</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Approccio</th>
+              <th>Tempo di adozione</th>
+              <th>Costo</th>
+              <th>Knowledge dinamica</th>
+              <th>Precisione / controllo</th>
+              <th>Indicazione</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Training</strong></td>
+              <td><span class="score slow">Lento</span></td>
+              <td>Molto alto</td>
+              <td>Bassa</td>
+              <td>Molto alta</td>
+              <td>Molto potente, ma da usare solo in casi strategici.</td>
+            </tr>
+            <tr>
+              <td><strong>Fine-tuning</strong></td>
+              <td><span class="score medium">Medio-rapido</span></td>
+              <td>Medio</td>
+              <td>Media-bassa</td>
+              <td>Alta</td>
+              <td>Buon equilibrio tra costo, velocità e qualità.</td>
+            </tr>
+            <tr>
+              <td><strong>RAG</strong></td>
+              <td><span class="score high">Molto rapido</span></td>
+              <td>Basso-medio</td>
+              <td>Molto alta</td>
+              <td>Media</td>
+              <td>Ottimo punto di partenza per basi dati dinamiche.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="notes" aria-label="Note operative">
+        <article class="panel note">
+          <h2>Regola pratica</h2>
+          <p>Parti da RAG; usa fine-tuning per più specializzazione; training solo se necessario.</p>
+        </article>
+        <article class="panel note">
+          <h2>Knowledge semplice</h2>
+          <p>SLM e modelli open source possono bastare in molti casi.</p>
+        </article>
+        <article class="panel note">
+          <h2>Knowledge volatile</h2>
+          <p>Più la knowledge cambia, più il RAG conviene rispetto al riaddestramento.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer>Pagina derivata dalla slide 5 della presentazione sulla specializzazione degli LLM.</footer>
+  </div>
+
+  <script>
+    (function(){
+      const btn=document.querySelector('[data-theme-toggle]');
+      const root=document.documentElement;
+      let theme='dark';
+      root.setAttribute('data-theme', theme);
+      btn.addEventListener('click',()=>{
+        theme = theme === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', theme);
+        btn.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' mode');
+        btn.innerHTML = theme === 'dark'
+          ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+          : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+      });
+    })();
+  </script>
+</body>
+</html>
